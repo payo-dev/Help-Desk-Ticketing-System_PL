@@ -1,0 +1,191 @@
+USE erp_helpdesk;
+
+CREATE TABLE departments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id VARCHAR(20) UNIQUE,
+  first_name VARCHAR(50) NOT NULL,
+  last_name VARCHAR(50) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role_id INT,
+  department_id INT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (role_id) REFERENCES roles(id),
+  FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+CREATE TABLE tickets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_number VARCHAR(20) UNIQUE NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  category VARCHAR(50),
+  priority ENUM('Critical','High','Medium','Low') DEFAULT 'Medium',
+  status ENUM('Submitted','Reviewed','Assigned','In Progress','Pending User','Resolved','Closed') DEFAULT 'Submitted',
+  requester_id INT,
+  assigned_to INT,
+  department_id INT,
+  sla_deadline DATETIME,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (requester_id) REFERENCES users(id),
+  FOREIGN KEY (assigned_to) REFERENCES users(id),
+  FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+CREATE TABLE ticket_comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  user_id INT,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE ticket_attachments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  file_name VARCHAR(255),
+  file_path VARCHAR(500),
+  uploaded_by INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+CREATE TABLE ticket_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  changed_by INT,
+  field_changed VARCHAR(50),
+  old_value VARCHAR(255),
+  new_value VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (changed_by) REFERENCES users(id)
+);
+
+CREATE TABLE assets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  asset_id VARCHAR(20) UNIQUE NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  category VARCHAR(50),
+  serial_number VARCHAR(100),
+  brand VARCHAR(50),
+  model VARCHAR(50),
+  purchase_date DATE,
+  purchase_cost DECIMAL(10,2),
+  warranty_expiry DATE,
+  assigned_to INT,
+  department_id INT,
+  status ENUM('Available','Assigned','Under Repair','Retired','Disposed') DEFAULT 'Available',
+  health_score ENUM('Excellent','Warning','Critical') DEFAULT 'Excellent',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (assigned_to) REFERENCES users(id),
+  FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+CREATE TABLE repair_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  asset_id INT,
+  ticket_id INT,
+  issue_description TEXT,
+  resolution TEXT,
+  repair_cost DECIMAL(10,2),
+  repaired_by INT,
+  repair_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (asset_id) REFERENCES assets(id),
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (repaired_by) REFERENCES users(id)
+);
+
+CREATE TABLE maintenance_records (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  asset_id INT,
+  maintenance_type VARCHAR(50),
+  description TEXT,
+  scheduled_date DATE,
+  completed_date DATE,
+  cost DECIMAL(10,2),
+  performed_by INT,
+  status ENUM('Scheduled','Completed','Overdue') DEFAULT 'Scheduled',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (asset_id) REFERENCES assets(id),
+  FOREIGN KEY (performed_by) REFERENCES users(id)
+);
+
+CREATE TABLE approvals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  approver_id INT,
+  status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+  remarks TEXT,
+  approved_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (approver_id) REFERENCES users(id)
+);
+
+CREATE TABLE notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  title VARCHAR(255),
+  message TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE knowledge_base (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  category VARCHAR(50),
+  created_by INT,
+  views INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE satisfaction_ratings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT,
+  user_id INT,
+  rating INT CHECK (rating BETWEEN 1 AND 5),
+  feedback TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE audit_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  action VARCHAR(255),
+  details TEXT,
+  ip_address VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE system_settings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
+  setting_value TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

@@ -51,8 +51,12 @@ function redirectByRole(role) {
       window.location.href = 'dashboard-helpdesk.html';
       break;
       
-    // ADDED: The new IT Specialist routing!
+    // Route all department specialists to the specialist dashboard
     case 'IT Specialist':
+    case 'HR Specialist':
+    case 'Finance Specialist':
+    case 'Facilities Specialist':
+    case 'Procurement Specialist':
       window.location.href = 'specialist-dashboard.html';
       break;
       

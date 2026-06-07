@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSpecialists();
 
   const searchInput = document.querySelector('input[placeholder="Search by ID or Title..."]');
-  const statusFilter = document.querySelector('select');
+  const statusFilter = document.getElementById('statusFilter') || document.querySelector('select');
 
   if (searchInput) searchInput.addEventListener('input', applyFilters);
   if (statusFilter) statusFilter.addEventListener('change', applyFilters);
@@ -28,7 +28,7 @@ async function fetchTickets() {
       return;
     }
 
-    renderTable(globalTickets);
+    applyFilters();
   } catch (err) {
     console.error('Error loading tickets:', err);
     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500">Failed to load tickets.</td></tr>`;
@@ -108,16 +108,18 @@ function renderTable(ticketsToRender) {
 // ===================== FILTERS =====================
 function applyFilters() {
   const searchInput = document.querySelector('input[placeholder="Search by ID or Title..."]');
-  const statusFilter = document.querySelector('select');
+  const statusFilter = document.getElementById('statusFilter') || document.querySelector('select');
 
   const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-  const filterValue = statusFilter ? statusFilter.value : 'all';
+  const filterValue = statusFilter ? statusFilter.value : 'active';
 
   const filtered = globalTickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm) ||
                           ticket.ticket_number.toLowerCase().includes(searchTerm);
     let matchesStatus = true;
-    if (filterValue !== 'all') {
+    if (filterValue === 'active') {
+      matchesStatus = !['resolved', 'closed'].includes(ticket.status.toLowerCase());
+    } else if (filterValue !== 'all') {
       const normalized = filterValue.replace('_', ' ').toLowerCase();
       matchesStatus = ticket.status.toLowerCase() === normalized;
     }

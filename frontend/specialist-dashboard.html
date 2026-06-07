@@ -3,124 +3,269 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Workspace | IT Specialist</title>
+  <title>Specialist Workspace | Help-Desk</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Inter', sans-serif; }</style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease; }
+  </style>
 </head>
-<body class="bg-[#f8f9fa] flex min-h-screen">
+<body class="bg-[#f8f9fa] text-gray-800 flex min-h-screen">
 
-  <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20 shadow-sm">
-    <div class="px-8 py-6 flex items-center gap-3 border-b border-gray-50">
-      <div class="flex items-center justify-center w-8 h-8 bg-indigo-600 rounded-lg shadow-sm shadow-indigo-200 text-white">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+
+    <div class="px-8 py-6 flex items-center gap-3">
+      <div id="sidebar-icon" class="flex items-center justify-center w-8 h-8 bg-[#10b981] rounded-lg shadow-sm text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
       </div>
       <div>
-        <h1 class="text-lg font-bold text-gray-900 leading-none">Help-Desk</h1>
-        <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-wider mt-1">IT Workspace</p>
+        <h1 class="text-lg font-bold text-gray-900 tracking-tight leading-none">Help-Desk</h1>
+        <p class="text-[10px] font-bold uppercase tracking-wider mt-1" id="sidebar-dept-label">Specialist</p>
       </div>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-1.5">
-      <a href="specialist-dashboard.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-sm transition">
+    <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
+      <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2">My Workspace</p>
+
+      <a href="specialist-dashboard.html" id="nav-queue" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#ecfdf5] text-[#10b981] font-semibold text-sm transition">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
         My Ticket Queue
+        <span id="queue-badge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
       </a>
-      <a href="assets.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        Hardware Assets
+
+      <a href="specialist-resolved.html" id="nav-resolved" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Resolved Tickets
       </a>
-      <a href="knowledge-base.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
+
+      <a href="specialist-kb.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
         Knowledge Base
       </a>
+
+      <!-- IT-only link -->
+      <a href="assets.html" id="nav-assets" class="nav-link hidden flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        Hardware Assets
+      </a>
     </nav>
+
+    <div class="px-6 py-5 border-t border-gray-100">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm" id="user-avatar">?</div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 leading-tight" id="user-name">Loading...</p>
+          <p class="text-xs text-gray-500 font-medium" id="user-role">Specialist</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 hover:bg-red-50 hover:text-red-600 text-sm font-medium rounded-xl transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+        Log out
+      </button>
+    </div>
   </aside>
 
-  <main class="ml-64 flex-1 p-10">
-    
-    <div class="mb-10">
-      <h2 class="text-3xl font-bold text-gray-900">My Workspace</h2>
-      <p class="text-gray-500 mt-1 text-sm">Manage your active assignments and pull from the unassigned pool.</p>
-    </div>
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="ml-64 flex-1 flex flex-col min-h-screen">
 
-    <div class="mb-12">
-      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-indigo-500"></span> My Active Tickets
-      </h3>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b border-gray-100">
-            <tr>
-              <th class="px-6 py-4">Ticket</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody id="my-tickets-tbody" class="divide-y divide-gray-50"></tbody>
-        </table>
+    <!-- Header -->
+    <header class="bg-[#f8f9fa] px-8 py-6 flex items-center justify-between sticky top-0 z-10">
+      <div>
+        <div class="flex items-center gap-3 mb-1">
+          <!-- Dynamic dept badge -->
+          <span id="dept-badge" class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">All</span>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900" id="page-title">My Workspace</h2>
+        <p class="text-sm text-gray-500" id="page-subtitle">Your assigned tickets and available pool.</p>
       </div>
-    </div>
-
-    <div>
-      <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-yellow-400"></span> Unassigned IT Tickets
-      </h3>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-semibold border-b border-gray-100">
-            <tr>
-              <th class="px-6 py-4">Ticket</th>
-              <th class="px-6 py-4">Priority</th>
-              <th class="px-6 py-4">Action</th>
-            </tr>
-          </thead>
-          <tbody id="pool-tickets-tbody" class="divide-y divide-gray-50"></tbody>
-        </table>
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p class="text-xs text-gray-400 font-medium">Active Tickets</p>
+          <p class="text-2xl font-bold text-gray-900" id="header-active-count">0</p>
+        </div>
       </div>
-    </div>
+    </header>
 
+    <div class="px-8 pb-8 flex-1">
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <p class="text-xs text-gray-500 font-medium mb-2">Assigned to Me</p>
+          <p class="text-3xl font-bold text-indigo-600" id="stat-mine">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <p class="text-xs text-gray-500 font-medium mb-2">In Progress</p>
+          <p class="text-3xl font-bold text-yellow-500" id="stat-inprogress">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <p class="text-xs text-gray-500 font-medium mb-2">Resolved Today</p>
+          <p class="text-3xl font-bold text-[#10b981]" id="stat-resolved">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <p class="text-xs text-gray-500 font-medium mb-2">Pool Available</p>
+          <p class="text-3xl font-bold text-orange-500" id="stat-pool">0</p>
+        </div>
+      </div>
+
+      <div id="view-queue" class="space-y-6">
+        <!-- My Active Tickets -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+              <h3 class="text-base font-bold text-gray-900">My Active Tickets</h3>
+            </div>
+            <span class="text-xs text-gray-400 font-medium">Assigned to you</span>
+          </div>
+          <table class="w-full text-sm text-left">
+            <thead class="bg-gray-50 text-gray-400 uppercase text-xs font-semibold border-b border-gray-100">
+              <tr>
+                <th class="px-6 py-4">Ticket</th>
+                <th class="px-6 py-4">Category</th>
+                <th class="px-6 py-4">Priority</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">SLA</th>
+                <th class="px-6 py-4">Action</th>
+              </tr>
+            </thead>
+            <tbody id="my-tickets-tbody" class="divide-y divide-gray-50">
+              <tr><td colspan="6" class="text-center py-8 text-gray-400">No active tickets assigned to you.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Unassigned Pool -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+              <h3 class="text-base font-bold text-gray-900">Available Ticket Pool</h3>
+            </div>
+            <span class="text-xs text-gray-400 font-medium" id="pool-category-label">Filtered to your department</span>
+          </div>
+          <table class="w-full text-sm text-left">
+            <thead class="bg-gray-50 text-gray-400 uppercase text-xs font-semibold border-b border-gray-100">
+              <tr>
+                <th class="px-6 py-4">Ticket</th>
+                <th class="px-6 py-4">Category</th>
+                <th class="px-6 py-4">Priority</th>
+                <th class="px-6 py-4">Submitted</th>
+                <th class="px-6 py-4">Action</th>
+              </tr>
+            </thead>
+            <tbody id="pool-tickets-tbody" class="divide-y divide-gray-50">
+              <tr><td colspan="5" class="text-center py-8 text-gray-400">No tickets in the pool.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
   </main>
 
+  <!-- ===== WORK TICKET MODAL ===== -->
   <div id="workModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-8 m-4">
-      <h3 class="text-xl font-bold text-gray-900 mb-1" id="work-ticket-number">TK-XXXX</h3>
-      <p class="text-sm font-semibold text-gray-700 mb-6" id="work-ticket-title">Loading...</p>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg m-4 slide-in">
 
-      <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 mb-6 text-sm text-gray-600" id="work-ticket-desc"></div>
-
-      <div class="mb-6">
-        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Update Status</label>
-        <div class="flex gap-2">
-          <select id="update-status-select" class="flex-1 p-2.5 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="In Progress">In Progress</option>
-            <option value="Pending User">Pending User Input</option>
-            <option value="Resolved">Resolved</option>
-          </select>
-          <button onclick="saveStatus()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-sm transition">Update</button>
+      <div class="flex items-center justify-between px-8 py-6 border-b border-gray-100">
+        <div>
+          <p class="text-xs text-gray-400 font-mono font-bold" id="work-ticket-number">TK-XXXX</p>
+          <h3 class="text-lg font-bold text-gray-900 mt-0.5" id="work-ticket-title">Loading...</h3>
         </div>
+        <button onclick="toggleWorkModal(false)" class="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
       </div>
 
-      <div class="border-t border-gray-200 my-6"></div>
+      <div class="px-8 py-6 space-y-5">
 
-      <div>
-        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Misrouted? Transfer Ticket</label>
-        <div class="flex gap-2">
-          <select id="transfer-dept-select" class="flex-1 p-2.5 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-red-500">
-            <option value="2">Human Resources</option>
-            <option value="3">Finance</option>
-            <option value="4">General Operations</option>
-          </select>
-          <button onclick="transferTicket()" class="px-4 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium rounded-lg text-sm transition">Transfer</button>
+        <!-- Ticket Info -->
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm text-gray-600 leading-relaxed" id="work-ticket-desc">
+          No description provided.
         </div>
+
+        <!-- Category + Priority info -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Category</p>
+            <p class="text-sm font-semibold text-gray-900" id="work-ticket-category">—</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+            <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Priority</p>
+            <p class="text-sm font-semibold text-gray-900" id="work-ticket-priority">—</p>
+          </div>
+        </div>
+
+        <!-- Update Status -->
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Update Status</label>
+          <div class="flex gap-2">
+            <select id="update-status-select" class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981] transition">
+              <option value="In Progress">In Progress</option>
+              <option value="Pending User">Pending User Input</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <button id="btn-update-status" onclick="saveStatus()"
+              class="px-5 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-green-200">
+              Update
+            </button>
+          </div>
+        </div>
+
+        <!-- Technical Notes -->
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Technical Notes <span class="text-gray-300">(optional)</span></label>
+          <textarea id="work-notes" rows="2" placeholder="Add resolution notes or updates..."
+            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981] transition resize-none"></textarea>
+        </div>
+
+        <!-- Transfer Section -->
+        <div class="border-t border-gray-100 pt-4">
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+            Misrouted? Transfer to Another Department
+          </label>
+          <div class="flex gap-2">
+            <select id="transfer-dept-select" class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+              <option value="IT Support">IT Support</option>
+              <option value="HR Concern">HR</option>
+              <option value="Finance Request">Finance</option>
+              <option value="Facilities Request">Facilities</option>
+              <option value="Procurement Request">Procurement</option>
+              <option value="General Inquiry">General</option>
+            </select>
+            <button id="btn-transfer-ticket" onclick="transferTicket()"
+              class="px-4 py-2.5 bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold rounded-xl text-sm transition">
+              Transfer
+            </button>
+          </div>
+        </div>
+
       </div>
 
-      <div class="mt-8 flex justify-end">
-        <button onclick="toggleWorkModal(false)" class="px-5 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg transition">Close Window</button>
+      <div class="px-8 py-5 border-t border-gray-100 flex justify-end">
+        <button onclick="toggleWorkModal(false)" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition text-sm">
+          Close
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div id="success-toast" class="fixed bottom-6 right-6 bg-[#10b981] text-white px-6 py-4 rounded-2xl shadow-xl text-sm font-bold z-50 hidden items-center gap-2 slide-in">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toast-msg">Success!</span>
+  </div>
+
+  <script src="js/app.js"></script>
   <script src="js/specialist.js"></script>
 </body>
 </html>

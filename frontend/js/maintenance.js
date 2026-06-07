@@ -5,6 +5,7 @@ let currentTab = 'Scheduled';
 document.addEventListener('DOMContentLoaded', () => {
     fetchMaintenanceRecords();
     populateAssetDropdown(); 
+    populateUserDropdowns();
 
     const searchInput = document.getElementById('maintenanceSearch');
     if (searchInput) searchInput.addEventListener('input', applyFilters);
@@ -55,6 +56,28 @@ async function populateAssetDropdown() {
     } catch (err) {}
 }
 
+async function populateUserDropdowns() {
+    const maintDropdown = document.getElementById('maintAssignTo');
+    const editDropdown = document.getElementById('editAssignTo');
+    try {
+        // Assume you have an endpoint that gets users. 
+        const res = await fetch(`${API}/api/users`, { credentials: 'include' });
+        if (!res.ok) return;
+        const users = await res.json();
+        
+        // Filter out admins/executives, keep only relevant specialists
+        const allowedRoles = ['IT Specialist', 'Facilities Specialist'];
+        const specialistUsers = users.filter(user => allowedRoles.includes(user.role));
+
+        const options = '<option value="">Unassigned</option>' + specialistUsers.map(user => 
+            `<option value="${user.id}">${user.first_name} ${user.last_name} (${user.role})</option>`
+        ).join('');
+        
+        if(maintDropdown) maintDropdown.innerHTML = options;
+        if(editDropdown) editDropdown.innerHTML = options;
+    } catch (err) {}
+}
+
 function renderTable(recordsToRender) {
     const tbody = document.getElementById('maintenance-table-body');
     if (!tbody) return;
@@ -74,12 +97,14 @@ function renderTable(recordsToRender) {
             ? `<button onclick="openEditModal(${r.id}, 'view')" class="text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:text-blue-800 font-bold text-sm transition">View Details</button>`
             : `<button onclick="openEditModal(${r.id}, 'edit')" class="text-[#10b981] bg-green-50 px-3 py-1.5 rounded-lg hover:text-[#059669] font-bold text-sm transition">Edit</button>`;
 
+        const assignedName = r.first_name ? `${r.first_name} ${r.last_name}` : 'Unassigned';
+
         return `
         <tr class="hover:bg-gray-50 transition border-b border-gray-50">
             <td class="px-6 py-4 font-mono text-sm font-semibold text-gray-900">${niceDate}</td>
             <td class="px-6 py-4">
                 <p class="text-sm font-semibold text-gray-900">${r.asset_name || 'Deleted Asset'}</p>
-                <p class="text-xs text-gray-500">${r.asset_tag || ''}</p>
+                <p class="text-xs text-gray-500">Assigned To: ${assignedName}</p>
             </td>
             <td class="px-6 py-4 text-sm text-gray-700">${r.maintenance_type}</td>
             <td class="px-6 py-4">${getStatusBadge(r.status)}</td>
@@ -139,6 +164,10 @@ function openEditModal(recordId, mode) {
     document.getElementById('editStatus').value = record.status;
     document.getElementById('editDescription').value = record.description || '';
     document.getElementById('editCost').value = record.cost || '';
+    
+    if(document.getElementById('editAssignTo')) {
+       document.getElementById('editAssignTo').value = record.performed_by || '';
+    }
 
     if (record.completed_date) {
         document.getElementById('editCompletedDate').value = new Date(record.completed_date).toISOString().split('T')[0];
@@ -151,6 +180,7 @@ function openEditModal(recordId, mode) {
     document.getElementById('editCompletedDate').disabled = isViewOnly;
     document.getElementById('editCost').disabled = isViewOnly;
     document.getElementById('editDescription').disabled = isViewOnly;
+    if(document.getElementById('editAssignTo')) document.getElementById('editAssignTo').disabled = isViewOnly;
 
     toggleEditModal(true);
 }
@@ -164,7 +194,8 @@ async function handleScheduleSubmit(e) {
         asset_id: document.getElementById('maintAssetId').value,
         maintenance_type: document.getElementById('maintType').value,
         scheduled_date: document.getElementById('maintDate').value,
-        description: document.getElementById('maintDescription').value
+        description: document.getElementById('maintDescription').value,
+        performed_by: document.getElementById('maintAssignTo').value || null
     };
 
     try {
@@ -191,7 +222,8 @@ async function handleEditSubmit(e) {
         status: document.getElementById('editStatus').value,
         completed_date: document.getElementById('editCompletedDate').value || null,
         cost: document.getElementById('editCost').value || 0,
-        description: document.getElementById('editDescription').value
+        description: document.getElementById('editDescription').value,
+        performed_by: document.getElementById('editAssignTo').value || null
     };
 
     try {

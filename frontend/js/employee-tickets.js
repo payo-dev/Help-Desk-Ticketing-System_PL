@@ -3,11 +3,30 @@ let globalMyTickets = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   fetchMyTickets();
+  fetchAssets();
 
   // Live search
   const searchInput = document.getElementById('ticketSearch');
   if (searchInput) searchInput.addEventListener('input', applySearch);
 });
+
+async function fetchAssets() {
+  try {
+    const res = await fetch(`${API}/api/assets`, { credentials: 'include' });
+    if (!res.ok) return;
+    const assets = await res.json();
+    const datalist = document.getElementById('asset-list');
+    if (!datalist) return;
+    
+    let options = '';
+    assets.forEach(asset => {
+        options += `<option value="${asset.asset_id}">${asset.name}</option>`;
+    });
+    datalist.innerHTML = options;
+  } catch (err) {
+    console.error('Failed to load assets', err);
+  }
+}
 
 // ===================== FETCH MY TICKETS =====================
 async function fetchMyTickets() {

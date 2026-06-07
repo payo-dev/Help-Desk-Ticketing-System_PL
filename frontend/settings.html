@@ -10,6 +10,11 @@
     body { font-family: 'Inter', sans-serif; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease; }
   </style>
 </head>
 <body class="bg-[#f8f9fa] flex min-h-screen">
@@ -168,6 +173,13 @@
 
     </form>
   </main>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div id="success-toast" class="fixed bottom-6 right-6 bg-[#10b981] text-white px-6 py-4 rounded-2xl shadow-xl text-sm font-bold z-50 hidden items-center gap-2 slide-in">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toast-msg">Settings saved successfully!</span>
+  </div>
+
   <script src="js/app.js"></script>
   <script src="js/settings.js"></script>
 </body>

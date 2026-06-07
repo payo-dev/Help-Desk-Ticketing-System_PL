@@ -69,21 +69,37 @@ router.post('/', isAuthenticated, async (req, res) => {
 // 4. PUT /:id/status — Update ticket status
 router.put('/:id/status', isAuthenticated, async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, notes } = req.body;
     const { id } = req.params;
+    const userId = req.session.user.id;
 
-    if (req.session.user.role_id !== 1) {
-      return res.status(403).json({ message: 'Unauthorized.' });
+    // Prevent standard Employees (role_id 3) from arbitrarily updating ticket status
+    if (req.session.user.role_id === 3) {
+      return res.status(403).json({ message: 'Unauthorized to update ticket status.' });
     }
 
     const [result] = await db.query(
-      'UPDATE tickets SET status = ? WHERE id = ?',
+      'UPDATE tickets SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [status, id]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Ticket not found.' });
     }
+
+    // If the specialist added technical notes, save them to ticket_comments
+    if (notes && notes.trim() !== '') {
+      await db.query(
+        'INSERT INTO ticket_comments (ticket_id, user_id, comment) VALUES (?, ?, ?)',
+        [id, userId, notes.trim()]
+      );
+    }
+
+    // Log the status change in ticket_history
+    await db.query(
+      'INSERT INTO ticket_history (ticket_id, changed_by, field_changed, new_value) VALUES (?, ?, ?, ?)',
+      [id, userId, 'status', status]
+    );
 
     res.json({ message: 'Status updated successfully.' });
   } catch (err) {
@@ -133,51 +149,104 @@ router.put('/:id/assign', isAuthenticated, async (req, res) => {
 });
 
 
-// GET /api/tickets/queue/specialist — Get my tickets and unassigned IT tickets
-router.get('/queue/specialist', async (req, res) => {
-    try {
-        // Assuming your auth middleware sets req.session.user
-        const userId = req.session.user.id; 
-        const userDept = req.session.user.department_id; // e.g., 1 for IT
+// ===================== ADD THESE TO backend/routes/tickets.js =====================
 
-        // 1. Get tickets assigned specifically to this specialist
-        const [myTickets] = await db.query(
-            `SELECT * FROM tickets WHERE assigned_to = ? AND status NOT IN ('Resolved', 'Closed') ORDER BY created_at DESC`,
-            [userId]
-        );
+// GET /api/tickets/queue/specialist
+// Returns: { myTickets: [...], unassigned: [...] }
+// Smart: filters unassigned pool by the specialist's department category
+router.get('/queue/specialist', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const dept = req.session.user.department; // e.g. "IT", "HR", "Finance"
 
-        // 2. Get unassigned tickets belonging to their department
-        const [unassigned] = await db.query(
-            `SELECT * FROM tickets WHERE assigned_to IS NULL AND department_id = ? AND status NOT IN ('Resolved', 'Closed') ORDER BY created_at DESC`,
-            [userDept]
-        );
+    // Map department to ticket category
+const deptCategoryMap = {
+  'IT Department':      'IT Support',
+  'Human Resources':    'HR Concern',
+  'Finance':            'Finance Request',
+  'Facilities':         'Facilities Request',
+  'Procurement':        'Procurement Request',
+  'General Operations': 'General Inquiry',
+  'Operations':         'General Inquiry',
+};
+    const myCategory = deptCategoryMap[dept] || null;
 
-        res.json({ myTickets, unassigned });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error.' });
+    // My assigned tickets (not resolved/closed)
+    const [myTickets] = await db.query(`
+      SELECT * FROM tickets
+      WHERE assigned_to = ?
+      AND status NOT IN ('Resolved', 'Closed')
+      ORDER BY created_at DESC
+    `, [userId]);
+
+    // Unassigned pool — filtered to specialist's category
+    let unassignedQuery = `
+      SELECT * FROM tickets
+      WHERE assigned_to IS NULL
+      AND status NOT IN ('Resolved', 'Closed')
+    `;
+    const params = [];
+
+    if (myCategory) {
+      unassignedQuery += ` AND category IN (?, 'General Inquiry')`;
+      params.push(myCategory);
     }
+    unassignedQuery += ` ORDER BY created_at ASC`;
+
+    const [unassigned] = await db.query(unassignedQuery, params);
+
+    // My resolved tickets
+    const [resolvedTickets] = await db.query(`
+      SELECT * FROM tickets
+      WHERE assigned_to = ?
+      AND status IN ('Resolved', 'Closed')
+      ORDER BY updated_at DESC
+    `, [userId]);
+
+    res.json({ myTickets, unassigned, resolvedTickets });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error.' });
+  }
 });
 
-// PUT /api/tickets/:id/transfer — Transfer to another department
-router.put('/:id/transfer', async (req, res) => {
-    try {
-        const { target_department_id } = req.body;
-        const ticketId = req.params.id;
+// PUT /api/tickets/:id/claim
+// Specialist claims a ticket from the pool — assigns it to themselves
+router.put('/:id/claim', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { id } = req.params;
 
-        // Reset the ticket, remove the assignee, and change the department
-        await db.query(
-            `UPDATE tickets SET department_id = ?, assigned_to = NULL, status = 'Submitted' WHERE id = ?`,
-            [target_department_id, ticketId]
-        );
+    await db.query(
+      `UPDATE tickets SET assigned_to = ?, status = 'In Progress' WHERE id = ? AND assigned_to IS NULL`,
+      [userId, id]
+    );
 
-        res.json({ message: 'Ticket transferred successfully.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error.' });
-    }
+    res.json({ message: 'Ticket claimed.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error.' });
+  }
 });
 
+// PUT /api/tickets/:id/transfer
+// Specialist transfers a misrouted ticket to another category (unassigns it)
+router.put('/:id/transfer', isAuthenticated, async (req, res) => {
+  try {
+    const { category } = req.body;
+    const { id } = req.params;
+
+    await db.query(
+      `UPDATE tickets SET category = ?, assigned_to = NULL, status = 'Submitted' WHERE id = ?`,
+      [category, id]
+    );
+
+    res.json({ message: 'Ticket transferred.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
 
 
 

@@ -40,19 +40,37 @@ document.getElementById('login-btn').addEventListener('click', async () => {
 });
 
 function redirectByRole(role) {
-  switch (role) {
+  // Convert role to string just in case, to prevent errors
+  const userRole = role ? role.toString() : '';
+
+  switch (userRole) {
     case 'System Administrator':
+    case 'Admin':
     case 'Help Desk Agent':
     case 'Team Lead':
       window.location.href = 'dashboard-helpdesk.html';
       break;
+      
+    // ADDED: The new IT Specialist routing!
+    case 'IT Specialist':
+      window.location.href = 'specialist-dashboard.html';
+      break;
+      
+    case 'Employee':
+      window.location.href = 'employee-tickets.html';
+      break;
+
     case 'Asset Manager':
       window.location.href = 'dashboard-assets.html';
       break;
+
     case 'Executive':
       window.location.href = 'dashboard-executive.html';
       break;
+
     default:
-      window.location.href = 'dashboard-helpdesk.html';
+      // If the role is missing or unknown, send them back to login for security
+      alert(`Role not recognized: [${userRole}]. Please contact support.`);
+      window.location.href = 'login.html';
   }
 }

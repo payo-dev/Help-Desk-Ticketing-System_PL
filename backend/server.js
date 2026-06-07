@@ -39,6 +39,8 @@ app.use('/api/assets', require('./routes/assets'));
 app.use('/api/maintenance', require('./routes/maintenance'))
 app.use('/api/kb', require('./routes/kb'));
 app.use('/api/approvals', require('./routes/approvals'));
+app.use('/api/reports', require('./routes/reports'));
+app.use('/api/users', require('./routes/users'));
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

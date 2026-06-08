@@ -48,7 +48,8 @@ async function loadSpecialists() {
     specialists.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = `${s.first_name} ${s.last_name} (${s.role})`;
+      const deptText = s.department ? ` - ${s.department}` : '';
+      opt.textContent = `${s.first_name} ${s.last_name} (${s.role}${deptText})`;
       select.appendChild(opt);
     });
   } catch (err) {
@@ -118,7 +119,7 @@ function applyFilters() {
                           ticket.ticket_number.toLowerCase().includes(searchTerm);
     let matchesStatus = true;
     if (filterValue === 'active') {
-      matchesStatus = !['resolved', 'closed'].includes(ticket.status.toLowerCase());
+      matchesStatus = ['submitted', 'in progress', 'pending user', 'assigned', 'reviewed', 'pending approval'].includes(ticket.status.toLowerCase());
     } else if (filterValue !== 'all') {
       const normalized = filterValue.replace('_', ' ').toLowerCase();
       matchesStatus = ticket.status.toLowerCase() === normalized;
@@ -171,8 +172,10 @@ async function saveTicketChanges() {
   const assignedTo = document.getElementById('detail-assign-select').value;
 
   const btn = document.getElementById('save-status-btn');
-  btn.textContent = 'Saving...';
+  const originalText = btn.textContent;
+  btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Saving...`;
   btn.disabled = true;
+  btn.classList.add('opacity-75', 'cursor-not-allowed');
 
   try {
     const res = await fetch(`${API}/api/tickets/${currentTicketId}/assign`, {
@@ -189,6 +192,7 @@ async function saveTicketChanges() {
     if (res.ok) {
       toggleDetailsModal(false);
       fetchTickets();
+      showToast('Ticket successfully updated and assigned!');
     } else {
       alert('Failed to save changes.');
     }
@@ -196,8 +200,9 @@ async function saveTicketChanges() {
     console.error('Error saving:', err);
     alert('Server connection error.');
   } finally {
-    btn.textContent = 'Save Changes';
+    btn.textContent = originalText;
     btn.disabled = false;
+    btn.classList.remove('opacity-75', 'cursor-not-allowed');
   }
 }
 
@@ -206,6 +211,22 @@ function toggleDetailsModal(show) {
   const modal = document.getElementById('ticketDetailsModal');
   modal.classList.toggle('hidden', !show);
   modal.classList.toggle('flex', show);
+}
+
+// ===================== TOAST NOTIFICATION =====================
+function showToast(msg) {
+  const toast = document.getElementById('success-toast');
+  const toastMsg = document.getElementById('toast-msg');
+  if (!toast || !toastMsg) return;
+  
+  toastMsg.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.classList.add('flex');
+  
+  setTimeout(() => {
+    toast.classList.add('hidden');
+    toast.classList.remove('flex');
+  }, 3000);
 }
 
 // Close on backdrop click

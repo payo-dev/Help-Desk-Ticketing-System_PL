@@ -216,8 +216,10 @@ function getSLAText(ticket) {
 
 // ===================== CLAIM TICKET =====================
 async function claimTicket(ticketId, btn) {
+  let originalText = '';
   if (btn) {
-    btn.textContent = 'Claiming...';
+    originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Claiming...`;
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
   }
@@ -232,6 +234,8 @@ async function claimTicket(ticketId, btn) {
     if (res.ok) {
       fetchSpecialistQueue();
       showToast('Ticket claimed and assigned to your queue!');
+      
+      if (typeof fetchNotifications === 'function') fetchNotifications();
     } else {
       alert('Failed to claim ticket.');
     }
@@ -239,7 +243,7 @@ async function claimTicket(ticketId, btn) {
     console.error('Error claiming:', err);
   } finally {
     if (btn) {
-      btn.textContent = 'Claim Ticket';
+      btn.innerHTML = originalText;
       btn.disabled = false;
       btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
@@ -273,9 +277,11 @@ async function saveStatus() {
   const status = document.getElementById('update-status-select').value;
   const notes = document.getElementById('work-notes').value;
   const btn = document.getElementById('btn-update-status');
+  let originalText = '';
 
   if (btn) {
-    btn.textContent = 'Updating...';
+    originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Updating...`;
     btn.disabled = true;
     btn.classList.add('opacity-75', 'cursor-not-allowed');
   }
@@ -296,6 +302,8 @@ async function saveStatus() {
       } else {
         showToast('Ticket status updated.');
       }
+      
+      if (typeof fetchNotifications === 'function') fetchNotifications();
     } else {
       try {
         const errData = await res.json();
@@ -308,7 +316,7 @@ async function saveStatus() {
     console.error('Error updating:', err);
   } finally {
     if (btn) {
-      btn.textContent = 'Update';
+      btn.innerHTML = originalText;
       btn.disabled = false;
       btn.classList.remove('opacity-75', 'cursor-not-allowed');
     }
@@ -321,8 +329,10 @@ async function transferTicket() {
   if (!confirm(`Transfer this ticket to ${newCategory}? It will be unassigned.`)) return;
 
   const btn = document.getElementById('btn-transfer-ticket');
+  let originalText = '';
   if (btn) {
-    btn.textContent = 'Transferring...';
+    originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Transferring...`;
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
   }
@@ -339,6 +349,8 @@ async function transferTicket() {
       toggleWorkModal(false);
       fetchSpecialistQueue();
       showToast(`Ticket transferred to ${newCategory}.`);
+      
+      if (typeof fetchNotifications === 'function') fetchNotifications();
     } else {
       alert('Failed to transfer ticket.');
     }
@@ -346,7 +358,7 @@ async function transferTicket() {
     console.error('Error transferring:', err);
   } finally {
     if (btn) {
-      btn.textContent = 'Transfer';
+      btn.innerHTML = originalText;
       btn.disabled = false;
       btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }

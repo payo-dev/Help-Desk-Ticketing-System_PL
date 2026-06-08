@@ -37,7 +37,10 @@ async function fetchMyTickets() {
 
     globalMyTickets = await res.json();
     updateStats(globalMyTickets);
-    renderTable(globalMyTickets);
+    
+    // Filter table to ONLY show active statuses
+    const activeTickets = globalMyTickets.filter(t => !['Resolved', 'Closed'].includes(t.status));
+    renderTable(activeTickets);
   } catch (err) {
     console.error('Error fetching tickets:', err);
   }
@@ -46,10 +49,10 @@ async function fetchMyTickets() {
 // ===================== STATS =====================
 function updateStats(tickets) {
   document.getElementById('emp-stat-total').textContent = tickets.length;
+  document.getElementById('emp-stat-submitted').textContent =
+    tickets.filter(t => t.status === 'Submitted').length;
   document.getElementById('emp-stat-open').textContent =
-    tickets.filter(t => ['In Progress', 'Assigned', 'Reviewed', 'Submitted'].includes(t.status)).length;
-  document.getElementById('emp-stat-resolved').textContent =
-    tickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+    tickets.filter(t => ['In Progress', 'Assigned', 'Reviewed'].includes(t.status)).length;
   document.getElementById('emp-stat-pending').textContent =
     tickets.filter(t => t.status === 'Pending User').length;
 }
@@ -119,9 +122,10 @@ function renderTable(tickets) {
 function applySearch() {
   const term = document.getElementById('ticketSearch').value.toLowerCase();
   const filtered = globalMyTickets.filter(t =>
-    t.title.toLowerCase().includes(term) ||
-    t.ticket_number.toLowerCase().includes(term) ||
-    (t.category && t.category.toLowerCase().includes(term))
+    !['Resolved', 'Closed'].includes(t.status) &&
+    (t.title.toLowerCase().includes(term) ||
+     t.ticket_number.toLowerCase().includes(term) ||
+     (t.category && t.category.toLowerCase().includes(term)))
   );
   renderTable(filtered);
 }
@@ -201,8 +205,10 @@ async function submitTicket() {
   const fullDescription = extraNotes ? `${description}\n\n--- Additional Info ---\n${extraNotes}` : description;
 
   const btn = document.getElementById('submit-btn');
-  btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Submitting...`;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = `<svg class="w-4 h-4 animate-spin inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Submitting...`;
   btn.disabled = true;
+  btn.classList.add('opacity-75', 'cursor-not-allowed');
 
   try {
     const res = await fetch(`${API}/api/tickets`, {
@@ -219,6 +225,9 @@ async function submitTicket() {
       resetForm();
       fetchMyTickets();
       showToast(data.ticket_number || 'Ticket submitted!');
+      
+      // Instantly refresh the notification bell so the 'Ticket Received' alert shows up immediately
+      if (typeof fetchNotifications === 'function') fetchNotifications();
     } else {
       errorEl.textContent = data.message || 'Failed to submit ticket.';
       errorEl.classList.remove('hidden');
@@ -227,8 +236,9 @@ async function submitTicket() {
     errorEl.textContent = 'Cannot connect to server.';
     errorEl.classList.remove('hidden');
   } finally {
-    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg> Submit Ticket`;
+    btn.innerHTML = originalText;
     btn.disabled = false;
+    btn.classList.remove('opacity-75', 'cursor-not-allowed');
   }
 }
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { isAuthenticated } = require('../middleware/auth');
-
+const { sendNotification } = require('./notification-route');
 // ⚠️ /my MUST be before GET / otherwise Express won't reach it
 // 1. GET /my — Employee sees only their own tickets
 router.get('/my', isAuthenticated, async (req, res) => {
@@ -55,6 +55,51 @@ router.post('/', isAuthenticated, async (req, res) => {
       [ticket_number, title, description || '', category, priority || 'Medium', requester_id, sla_deadline]
     );
 
+    // After ticket is created
+    await sendNotification(db, requester_id, 'Ticket Submitted', `Your ticket ${ticket_number} has been received.`, 'new_ticket');
+
+    // Notify Admins (role_id 1) and System Administrators (role_id 8) about the new ticket
+    const [admins] = await db.query('SELECT id FROM users WHERE role_id IN (1, 8)');
+    for (const admin of admins) {
+      if (admin.id !== requester_id) {
+        await sendNotification(db, admin.id, 'New Ticket Alert', `A new ticket ${ticket_number} has been submitted.`, 'new_ticket');
+      }
+    }
+
+    // Notify Specialists matching the ticket's category
+    const deptCategoryMap = {
+      'IT Support': 'IT Department',
+      'HR Concern': 'Human Resources',
+      'Finance Request': 'Finance',
+      'Facilities Request': 'Facilities',
+      'Procurement Request': 'Procurement',
+      'General Inquiry': 'General Operations'
+    };
+
+    if (category === 'General Inquiry') {
+      const [specialists] = await db.query(
+        "SELECT u.id FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name LIKE '%Specialist%'"
+      );
+      for (const spec of specialists) {
+        if (spec.id !== requester_id) {
+          await sendNotification(db, spec.id, 'New General Ticket', `A new General Inquiry ticket ${ticket_number} is in the pool.`, 'new_ticket');
+        }
+      }
+    } else {
+      const targetDeptName = deptCategoryMap[category];
+      if (targetDeptName) {
+        const [specialists] = await db.query(
+          "SELECT u.id FROM users u JOIN departments d ON u.department_id = d.id JOIN roles r ON u.role_id = r.id WHERE r.name LIKE '%Specialist%' AND (d.name = ? OR d.name LIKE ?)",
+          [targetDeptName, `${targetDeptName.split(' ')[0]}%`]
+        );
+        for (const spec of specialists) {
+          if (spec.id !== requester_id) {
+            await sendNotification(db, spec.id, 'New Ticket in Pool', `A new ${category} ticket ${ticket_number} needs assignment.`, 'new_ticket');
+          }
+        }
+      }
+    }
+
     res.status(201).json({
       message: 'Ticket created successfully.',
       ticket_id: result.insertId,
@@ -101,6 +146,11 @@ router.put('/:id/status', isAuthenticated, async (req, res) => {
       [id, userId, 'status', status]
     );
 
+    const [[ticketInfo]] = await db.query('SELECT requester_id FROM tickets WHERE id = ?', [id]);
+    if (ticketInfo && ticketInfo.requester_id) {
+      await sendNotification(db, ticketInfo.requester_id, 'Ticket Status Updated', `Your ticket status changed to ${status}.`, 'status_changed');
+    }
+
     res.json({ message: 'Status updated successfully.' });
   } catch (err) {
     console.error(err);
@@ -136,10 +186,46 @@ router.put('/:id/assign', isAuthenticated, async (req, res) => {
     const { status, priority, assigned_to } = req.body;
     const { id } = req.params;
 
-    await db.query(
-      'UPDATE tickets SET status = ?, priority = ?, assigned_to = ? WHERE id = ?',
-      [status, priority, assigned_to || null, id]
-    );
+    let query = 'UPDATE tickets SET status = ?, priority = ?, assigned_to = ?';
+    let params = [status, priority, assigned_to || null];
+
+    // If a specialist is assigned, automatically update the ticket's category to match their department
+    if (assigned_to) {
+      const [[userDept]] = await db.query(
+        'SELECT d.id as dept_id, d.name as dept_name FROM users u JOIN departments d ON u.department_id = d.id WHERE u.id = ?',
+        [assigned_to]
+      );
+
+      if (userDept) {
+        const deptCategoryMap = {
+          'IT Department':      'IT Support',
+          'Human Resources':    'HR Concern',
+          'Finance':            'Finance Request',
+          'Facilities':         'Facilities Request',
+          'Procurement':        'Procurement Request',
+          'General Operations': 'General Inquiry',
+          'Operations':         'General Inquiry'
+        };
+        const newCategory = deptCategoryMap[userDept.dept_name];
+        
+        if (newCategory) {
+          query += ', category = ?, department_id = ?';
+          params.push(newCategory, userDept.dept_id);
+        }
+      }
+    }
+
+    query += ' WHERE id = ?';
+    params.push(id);
+
+    await db.query(query, params);
+
+    if (assigned_to) {
+      const [[ticketInfo]] = await db.query('SELECT ticket_number FROM tickets WHERE id = ?', [id]);
+      if (ticketInfo) {
+        await sendNotification(db, assigned_to, 'Ticket Assigned', `Ticket ${ticketInfo.ticket_number} has been assigned to you.`, 'ticket_assigned');
+      }
+    }
 
     res.json({ message: 'Ticket updated.' });
   } catch (err) {
@@ -240,6 +326,37 @@ router.put('/:id/transfer', isAuthenticated, async (req, res) => {
       `UPDATE tickets SET category = ?, assigned_to = NULL, status = 'Submitted' WHERE id = ?`,
       [category, id]
     );
+
+    // Notify Specialists of the new department that a ticket was transferred to them
+    const [[ticketInfo]] = await db.query('SELECT ticket_number FROM tickets WHERE id = ?', [id]);
+    const deptCategoryMap = {
+      'IT Support': 'IT Department',
+      'HR Concern': 'Human Resources',
+      'Finance Request': 'Finance',
+      'Facilities Request': 'Facilities',
+      'Procurement Request': 'Procurement',
+      'General Inquiry': 'General Operations'
+    };
+
+    if (category === 'General Inquiry' && ticketInfo) {
+      const [specialists] = await db.query(
+        "SELECT u.id FROM users u JOIN roles r ON u.role_id = r.id WHERE r.name LIKE '%Specialist%'"
+      );
+      for (const spec of specialists) {
+        await sendNotification(db, spec.id, 'Ticket Transferred', `Ticket ${ticketInfo.ticket_number} was transferred to the General pool.`, 'new_ticket');
+      }
+    } else {
+      const targetDeptName = deptCategoryMap[category];
+      if (targetDeptName && ticketInfo) {
+        const [specialists] = await db.query(
+          "SELECT u.id FROM users u JOIN departments d ON u.department_id = d.id JOIN roles r ON u.role_id = r.id WHERE r.name LIKE '%Specialist%' AND (d.name = ? OR d.name LIKE ?)",
+          [targetDeptName, `${targetDeptName.split(' ')[0]}%`]
+        );
+        for (const spec of specialists) {
+          await sendNotification(db, spec.id, 'Ticket Transferred', `Ticket ${ticketInfo.ticket_number} was transferred to your pool.`, 'new_ticket');
+        }
+      }
+    }
 
     res.json({ message: 'Ticket transferred.' });
   } catch (err) {

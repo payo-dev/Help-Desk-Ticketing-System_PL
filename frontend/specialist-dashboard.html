@@ -79,14 +79,14 @@
     <!-- Header -->
     <header class="bg-[#f8f9fa] px-8 py-6 flex items-center justify-between sticky top-0 z-10">
       <div>
-        <div class="flex items-center gap-3 mb-1">
+        <div class="flex items-center gap-2 mb-1">
           <!-- Dynamic dept badge -->
           <span id="dept-badge" class="text-xs font-bold uppercase px-3 py-1 rounded-full bg-green-100 text-green-700">All</span>
         </div>
         <h2 class="text-2xl font-bold text-gray-900" id="page-title">My Workspace</h2>
         <p class="text-sm text-gray-500" id="page-subtitle">Your assigned tickets and available pool.</p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-4">
         <div class="text-right">
           <p class="text-xs text-gray-400 font-medium">Active Tickets</p>
           <p class="text-2xl font-bold text-gray-900" id="header-active-count">0</p>
@@ -240,7 +240,7 @@
               <option value="Finance Request">Finance</option>
               <option value="Facilities Request">Facilities</option>
               <option value="Procurement Request">Procurement</option>
-              <option value="General Inquiry">General</option>
+              <option value="General Inquiry">General Inquiry</option>
             </select>
             <button id="btn-transfer-ticket" onclick="transferTicket()"
               class="px-4 py-2.5 bg-white border border-red-200 text-red-500 hover:bg-red-50 font-semibold rounded-xl text-sm transition">
@@ -267,5 +267,6 @@
 
   <script src="js/app.js"></script>
   <script src="js/specialist.js"></script>
+  <script src="js/notification.js"></script>
 </body>
 </html>

@@ -82,11 +82,13 @@
         <h2 class="text-2xl font-bold text-gray-900">My Tickets</h2>
         <p class="text-sm text-gray-500">Submit a request or track your existing tickets.</p>
       </div>
-      <button onclick="toggleSubmitModal(true)"
-        class="bg-[#10b981] hover:bg-[#059669] text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-green-200 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        New Ticket
-      </button>
+      <div class="flex items-center gap-4">
+        <button onclick="toggleSubmitModal(true)"
+          class="bg-[#10b981] hover:bg-[#059669] text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-green-200 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          New Ticket
+        </button>
+      </div>
     </header>
 
     <div class="px-8 pb-8 flex-1">
@@ -98,12 +100,12 @@
           <p class="text-3xl font-bold text-gray-900" id="emp-stat-total">0</p>
         </div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p class="text-xs text-gray-500 font-medium mb-2">In Progress</p>
-          <p class="text-3xl font-bold text-yellow-500" id="emp-stat-open">0</p>
+          <p class="text-xs text-gray-500 font-medium mb-2">Submitted</p>
+          <p class="text-3xl font-bold text-blue-500" id="emp-stat-submitted">0</p>
         </div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p class="text-xs text-gray-500 font-medium mb-2">Resolved</p>
-          <p class="text-3xl font-bold text-[#10b981]" id="emp-stat-resolved">0</p>
+          <p class="text-xs text-gray-500 font-medium mb-2">In Progress</p>
+          <p class="text-3xl font-bold text-yellow-500" id="emp-stat-open">0</p>
         </div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <p class="text-xs text-gray-500 font-medium mb-2">Pending Response</p>
@@ -422,5 +424,6 @@
 
   <script src="js/app.js"></script>
   <script src="js/employee-tickets.js"></script>
+  <script src="js/notification.js"></script>
 </body>
 </html>

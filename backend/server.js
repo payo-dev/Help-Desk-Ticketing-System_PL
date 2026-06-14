@@ -42,7 +42,7 @@ app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/settings', require('./routes/settings'));
-
+app.use('/api/notifications', require('./routes/notification-route'));
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

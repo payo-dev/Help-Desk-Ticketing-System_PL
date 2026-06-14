@@ -55,9 +55,10 @@ router.get('/departments', isAuthenticated, async (req, res) => {
 router.get('/specialists', isAuthenticated, async (req, res) => {
   try {
     const [users] = await db.query(`
-      SELECT u.id, u.first_name, u.last_name, r.name as role
+      SELECT u.id, u.first_name, u.last_name, r.name as role, d.name as department
       FROM users u
       JOIN roles r ON u.role_id = r.id
+      LEFT JOIN departments d ON u.department_id = d.id
       WHERE r.name LIKE '%Specialist%' AND u.is_active = 1
       ORDER BY u.first_name ASC
     `);

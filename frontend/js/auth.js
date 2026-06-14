@@ -1,6 +1,7 @@
 const API = 'http://127.0.0.1:3000';
 
-document.getElementById('login-btn').addEventListener('click', async () => {
+const loginForm = document.getElementById('login-form');
+const loginHandler = async () => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
   const errorMsg = document.getElementById('error-msg');
@@ -37,7 +38,17 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     errorMsg.textContent = 'Cannot connect to server.';
     errorMsg.classList.remove('hidden');
   }
-});
+};
+
+// Support both form submit (Enter key) and button click
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    loginHandler();
+  });
+} else {
+  document.getElementById('login-btn').addEventListener('click', loginHandler);
+}
 
 function redirectByRole(role) {
   // Convert role to string just in case, to prevent errors

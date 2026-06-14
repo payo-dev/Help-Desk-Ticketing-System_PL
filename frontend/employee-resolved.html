@@ -5,224 +5,399 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Resolved Tickets | Help-Desk</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Poppins', sans-serif; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(10px); }
+    * { font-family: 'Inter', sans-serif; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+    #sidebar { transition: transform 0.28s cubic-bezier(.4,0,.2,1); }
+    #sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.45); z-index: 19;
+      backdrop-filter: blur(2px);
+    }
+    @media (max-width: 1023px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-overlay.open { display: block; }
+      main { margin-left: 0 !important; }
+    }
+
+    .nav-item { position: relative; }
+    .nav-item.active { background: #f0fdf9; color: #059669; }
+    .nav-item.active .nav-icon { color: #059669; }
+    .nav-item:not(.active):hover { background: #f8fafc; color: #0f172a; }
+    .nav-item:not(.active):hover .nav-icon { color: #475569; }
+
+    .stat-card { transition: box-shadow .18s, transform .18s; }
+    .stat-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.07); transform: translateY(-1px); }
+
+    #resolved-tickets-body tr:hover td { background: #fafafa; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; letter-spacing: .02em; }
+
+    .field-input {
+      width: 100%; padding: 10px 13px;
+      background: #f8fafc; border: 1.5px solid #e2e8f0;
+      border-radius: 10px; font-size: 13.5px; color: #1e293b;
+      transition: border-color .18s, box-shadow .18s; outline: none;
+    }
+    .field-input::placeholder { color: #94a3b8; }
+    .field-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.12); background: #fff; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.5); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 50; padding: 24px; overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .slide-in { animation: slideIn 0.3s ease; }
+    .slide-in { animation: slideUp .25s ease; }
+
+    #hamburger { display: none; }
+    @media (max-width: 1023px) { #hamburger { display: flex; } }
+
+    .star-btn { transition: color .15s, transform .15s; }
+    .star-btn:hover { transform: scale(1.15); }
   </style>
 </head>
-<body class="bg-[#f8f9fa] text-gray-800 flex min-h-screen">
+<body class="bg-slate-50 text-slate-800 flex min-h-screen">
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+<!-- Mobile overlay -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-    <div class="px-8 py-6 flex items-center gap-3">
-      <div class="flex items-center justify-center w-8 h-8 bg-[#10b981] rounded-lg shadow-sm shadow-green-200 text-white">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-      </div>
-      <div>
-        <h1 class="text-lg font-bold text-gray-900 tracking-tight leading-none">Help-Desk</h1>
-        <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">Employee Portal</p>
+<!-- ══════════════════════════════
+     SIDEBAR
+══════════════════════════════ -->
+<aside id="sidebar" class="w-64 bg-white border-r border-slate-100 flex flex-col fixed h-full z-20"
+       style="box-shadow: 4px 0 32px rgba(0,0,0,.04);">
+
+  <!-- Brand -->
+  <div class="px-6 py-5 flex items-center gap-3 border-b border-slate-100">
+    <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shadow shadow-emerald-200 flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="text-[15px] font-bold text-slate-900 leading-none tracking-tight">Help-Desk</p>
+      <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest mt-1">Employee Portal</p>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
+    <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">My Workspace</p>
+
+    <a href="employee-tickets.html"
+       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 transition">
+      <svg class="nav-icon w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+      </svg>
+      My Tickets
+    </a>
+
+    <a href="employee-resolved.html"
+       class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition">
+      <svg class="nav-icon w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Resolved Tickets
+    </a>
+
+    <a href="employee-kb.html"
+       class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 transition">
+      <svg class="nav-icon w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      </svg>
+      Knowledge Base
+    </a>
+  </nav>
+
+  <!-- User / logout -->
+  <div class="px-4 py-4 border-t border-slate-100">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-9 h-9 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-sm flex-shrink-0" id="user-avatar">?</div>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-slate-900 leading-tight truncate" id="user-name">Loading…</p>
+        <p class="text-xs text-slate-400 font-medium" id="user-role">Employee</p>
       </div>
     </div>
+    <button onclick="logout()"
+      class="w-full py-2 flex items-center justify-center gap-2 text-slate-500 hover:bg-red-50 hover:text-red-600 text-xs font-semibold rounded-xl transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      Sign out
+    </button>
+  </div>
+</aside>
 
-    <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
-      <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2">My Workspace</p>
+<!-- ══════════════════════════════
+     MAIN
+══════════════════════════════ -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen transition-all duration-300">
 
-      <a href="employee-tickets.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
-        My Tickets
-      </a>
+  <!-- Top bar -->
+  <header class="sticky top-0 z-10 bg-slate-50/90 backdrop-blur border-b border-slate-100 px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
 
-      <a href="employee-resolved.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#ecfdf5] text-[#10b981] font-semibold text-sm transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        Resolved Tickets
-      </a>
+    <button id="hamburger" onclick="openSidebar()"
+      class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition flex-shrink-0">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
 
-      <a href="employee-kb.html" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-500 hover:text-gray-900 font-medium text-sm transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-        Knowledge Base
-      </a>
-    </nav>
-
-    <div class="px-6 py-5 border-t border-gray-100">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm" id="user-avatar">?</div>
-        <div>
-          <p class="text-sm font-semibold text-gray-900 leading-tight" id="user-name">Loading...</p>
-          <p class="text-xs text-gray-500 font-medium" id="user-role">Employee</p>
-        </div>
-      </div>
-      <button onclick="logout()" class="w-full py-2.5 flex items-center justify-center gap-2 text-gray-500 hover:bg-red-50 hover:text-red-600 text-sm font-medium rounded-xl transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-        Log out
-      </button>
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl font-bold text-slate-900 leading-tight">Resolved Tickets</h1>
+      <p class="text-xs text-slate-400 mt-0.5 hidden sm:block">Your completed and closed support requests.</p>
     </div>
-  </aside>
 
-  <!-- Main Content -->
-  <main class="ml-64 flex-1 flex flex-col min-h-screen">
+    <a href="employee-tickets.html"
+      class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm shadow-emerald-200 flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+      </svg>
+      <span class="hidden sm:inline">New Ticket</span>
+      <span class="sm:hidden">New</span>
+    </a>
+  </header>
 
-    <header class="bg-[#f8f9fa] px-8 py-6 flex items-center justify-between sticky top-0 z-10">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">Resolved Tickets</h2>
-        <p class="text-sm text-gray-500">Your completed and closed support requests.</p>
-      </div>
-      <a href="employee-tickets.html"
-        class="bg-[#10b981] hover:bg-[#059669] text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-green-200 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        New Ticket
-      </a>
-    </header>
+  <!-- Page content -->
+  <div class="px-6 lg:px-8 py-7 flex-1 space-y-7 max-w-7xl w-full mx-auto">
 
-    <div class="px-8 pb-8 flex-1">
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-      <!-- Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p class="text-xs text-gray-500 font-medium mb-2">Total Resolved</p>
-          <p class="text-3xl font-bold text-[#10b981]" id="stat-resolved">0</p>
-        </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p class="text-xs text-gray-500 font-medium mb-2">Closed</p>
-          <p class="text-3xl font-bold text-gray-500" id="stat-closed">0</p>
-        </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p class="text-xs text-gray-500 font-medium mb-2">This Month</p>
-          <p class="text-3xl font-bold text-indigo-500" id="stat-month">0</p>
-        </div>
-      </div>
-
-      <!-- Search -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 class="text-base font-bold text-gray-900">All Resolved & Closed Tickets</h3>
-          <div class="relative">
-            <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            <input type="text" id="resolvedSearch" placeholder="Search tickets..."
-              class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981] transition w-56">
+      <div class="stat-card bg-white rounded-2xl border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Resolved</p>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
           </div>
         </div>
+        <p class="text-3xl font-bold text-emerald-500 tabular-nums" id="stat-resolved">0</p>
+        <p class="text-xs text-slate-400 mt-1">All time</p>
+      </div>
 
-        <table class="w-full text-sm text-left">
-          <thead class="bg-gray-50 text-gray-400 uppercase text-xs font-semibold border-b border-gray-100">
+      <div class="stat-card bg-white rounded-2xl border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Closed</p>
+          <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        </div>
+        <p class="text-3xl font-bold text-slate-500 tabular-nums" id="stat-closed">0</p>
+        <p class="text-xs text-slate-400 mt-1">No further action needed</p>
+      </div>
+
+      <div class="stat-card bg-white rounded-2xl border border-slate-100 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">This Month</p>
+          <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+        </div>
+        <p class="text-3xl font-bold text-violet-500 tabular-nums" id="stat-month">0</p>
+        <p class="text-xs text-slate-400 mt-1">Resolved this month</p>
+      </div>
+
+    </div>
+
+    <!-- Table card -->
+    <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+
+      <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">All Resolved & Closed Tickets</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Click a row to view details and leave a rating.</p>
+        </div>
+        <div class="relative w-full sm:w-56 flex-shrink-0">
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="resolvedSearch" placeholder="Search tickets…" class="field-input pl-9 py-2 text-sm w-full">
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left min-w-[680px]">
+          <thead class="bg-slate-50 border-b border-slate-100">
             <tr>
-              <th class="px-6 py-4">Ticket #</th>
-              <th class="px-6 py-4">Title</th>
-              <th class="px-6 py-4">Category</th>
-              <th class="px-6 py-4">Priority</th>
-              <th class="px-6 py-4">Status</th>
-              <th class="px-6 py-4">Resolved On</th>
-              <th class="px-6 py-4">Action</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ticket #</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Title</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Priority</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Resolved On</th>
+              <th class="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
-          <tbody id="resolved-tickets-body" class="divide-y divide-gray-50">
+          <tbody id="resolved-tickets-body" class="divide-y divide-slate-50">
             <tr>
-              <td colspan="7" class="text-center py-10 text-gray-400">
-                <div class="flex flex-col items-center gap-2">
-                  <svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  No resolved tickets yet.
+              <td colspan="7" class="py-16 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-600">No resolved tickets yet</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Tickets you resolve will appear here.</p>
+                  </div>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══════════════════════════════
+     VIEW TICKET MODAL
+══════════════════════════════ -->
+<div id="viewTicketModal" class="modal-backdrop" onclick="handleModalBackdropClick(event,'viewTicketModal')">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative slide-in" onclick="event.stopPropagation()">
+
+    <div class="flex items-start justify-between px-7 py-5 border-b border-slate-100">
+      <div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ticket Details</p>
+        <h3 class="text-base font-bold text-slate-900" id="view-ticket-number">—</h3>
+      </div>
+      <button onclick="closeViewModal()"
+        class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition mt-0.5 flex-shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-7 py-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+      <!-- Status banner -->
+      <div id="view-status-banner" class="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-emerald-700" id="view-status-text">Resolved</p>
+          <p class="text-xs text-emerald-500">This ticket has been completed.</p>
+        </div>
+      </div>
+
+      <!-- Details block -->
+      <div class="bg-slate-50 rounded-xl p-5 space-y-4 border border-slate-100">
+        <div>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Title</p>
+          <p class="text-sm font-semibold text-slate-900" id="view-title">—</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Category</p>
+            <p class="text-sm text-slate-700" id="view-category">—</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Priority</p>
+            <span id="view-priority" class="badge bg-slate-100 text-slate-600">—</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date Submitted</p>
+            <p class="text-sm text-slate-700" id="view-date">—</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Last Updated</p>
+            <p class="text-sm text-slate-700" id="view-updated">—</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description</p>
+          <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-line" id="view-description">—</p>
+        </div>
+      </div>
+
+      <!-- Rating section -->
+      <div id="rating-section" class="bg-violet-50 border border-violet-100 rounded-xl p-5">
+        <p class="text-sm font-bold text-violet-800 mb-1">Rate this resolution</p>
+        <p class="text-xs text-violet-500 mb-3">How satisfied are you with the support you received?</p>
+        <div class="flex gap-1.5 mb-3" id="star-rating">
+          <button onclick="setRating(1)" class="star-btn text-[26px] text-slate-200 hover:text-yellow-400" data-value="1">★</button>
+          <button onclick="setRating(2)" class="star-btn text-[26px] text-slate-200 hover:text-yellow-400" data-value="2">★</button>
+          <button onclick="setRating(3)" class="star-btn text-[26px] text-slate-200 hover:text-yellow-400" data-value="3">★</button>
+          <button onclick="setRating(4)" class="star-btn text-[26px] text-slate-200 hover:text-yellow-400" data-value="4">★</button>
+          <button onclick="setRating(5)" class="star-btn text-[26px] text-slate-200 hover:text-yellow-400" data-value="5">★</button>
+        </div>
+        <textarea id="rating-feedback" rows="2" placeholder="Optional feedback…"
+          class="field-input resize-none text-sm mb-3"></textarea>
+        <button onclick="submitRating()" id="rating-btn"
+          class="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition shadow-sm shadow-violet-200">
+          Submit Rating
+        </button>
+      </div>
 
     </div>
-  </main>
 
-  <!-- VIEW TICKET MODAL -->
-  <div id="viewTicketModal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 slide-in">
-
-      <div class="flex items-center justify-between px-8 py-6 border-b border-gray-100">
-        <div>
-          <p class="text-xs text-gray-400 font-medium mb-1">Ticket Details</p>
-          <h3 class="text-xl font-bold text-gray-900" id="view-ticket-number">—</h3>
-        </div>
-        <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-
-      <div class="px-8 py-6 space-y-4">
-
-        <!-- Status Banner -->
-        <div id="view-status-banner" class="flex items-center gap-3 bg-green-50 border border-green-100 rounded-xl px-4 py-3">
-          <svg class="w-5 h-5 text-[#10b981] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          <div>
-            <p class="text-sm font-bold text-green-700" id="view-status-text">Resolved</p>
-            <p class="text-xs text-green-500">This ticket has been completed.</p>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 rounded-xl p-5 space-y-4 border border-gray-100">
-          <div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Title</p>
-            <p class="text-sm font-semibold text-gray-900" id="view-title">—</p>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Category</p>
-              <p class="text-sm text-gray-700" id="view-category">—</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Priority</p>
-              <span id="view-priority" class="text-xs font-bold px-2 py-1 rounded-md bg-gray-100 text-gray-600">—</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Date Submitted</p>
-              <p class="text-sm text-gray-700" id="view-date">—</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Last Updated</p>
-              <p class="text-sm text-gray-700" id="view-updated">—</p>
-            </div>
-          </div>
-          <div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</p>
-            <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line" id="view-description">—</p>
-          </div>
-        </div>
-
-        <!-- Rating Section -->
-        <div id="rating-section" class="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-          <p class="text-sm font-bold text-indigo-800 mb-3">Rate this resolution</p>
-          <div class="flex gap-2" id="star-rating">
-            <button onclick="setRating(1)" class="star-btn text-2xl text-gray-300 hover:text-yellow-400 transition" data-value="1">★</button>
-            <button onclick="setRating(2)" class="star-btn text-2xl text-gray-300 hover:text-yellow-400 transition" data-value="2">★</button>
-            <button onclick="setRating(3)" class="star-btn text-2xl text-gray-300 hover:text-yellow-400 transition" data-value="3">★</button>
-            <button onclick="setRating(4)" class="star-btn text-2xl text-gray-300 hover:text-yellow-400 transition" data-value="4">★</button>
-            <button onclick="setRating(5)" class="star-btn text-2xl text-gray-300 hover:text-yellow-400 transition" data-value="5">★</button>
-          </div>
-          <textarea id="rating-feedback" rows="2" placeholder="Optional feedback..."
-            class="mt-3 w-full p-2.5 bg-white border border-indigo-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"></textarea>
-          <button onclick="submitRating()" id="rating-btn"
-            class="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition">
-            Submit Rating
-          </button>
-        </div>
-
-      </div>
-
-      <div class="px-8 py-5 border-t border-gray-100 flex justify-end">
-        <button onclick="closeViewModal()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition text-sm">
-          Close
-        </button>
-      </div>
+    <div class="px-7 py-4 border-t border-slate-100 flex justify-end">
+      <button onclick="closeViewModal()"
+        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition">
+        Close
+      </button>
     </div>
   </div>
+</div>
 
-  <script src="js/app.js"></script>
-  <script src="js/employee-resolved.js"></script>
+<!-- ══════════════════════════════
+     HELPERS
+══════════════════════════════ -->
+<script>
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebar-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function handleModalBackdropClick(e, id) {
+    if (e.target === document.getElementById(id)) closeViewModal();
+  }
+  function closeViewModal() {
+    document.getElementById('viewTicketModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // Patch for JS files that call toggleViewModal
+  function toggleViewModal(open) {
+    const el = document.getElementById('viewTicketModal');
+    if (open) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    else closeViewModal();
+  }
+</script>
+
+<script src="js/app.js"></script>
+<script src="js/employee-resolved.js"></script>
 </body>
 </html>
